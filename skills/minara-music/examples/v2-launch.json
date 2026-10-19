@@ -1,0 +1,31 @@
+{
+  "title": "Minara V2 launch film (60s)",
+  "duration": 60, "bpm": 120, "key": "A minor", "seed": 7,
+  "sections": [
+    {"start": 0,  "end": 5,  "energy": "intro",     "note": "S1 data converges → avatar appears"},
+    {"start": 5,  "end": 15, "energy": "light",     "note": "S2 mobile: ask, pick a strategy"},
+    {"start": 15, "end": 25, "energy": "build",     "note": "S3 desktop: write a strategy in plain words"},
+    {"start": 25, "end": 38, "energy": "full",      "note": "backtest → go live → automations"},
+    {"start": 38, "end": 46, "energy": "breakdown", "note": "web version + private cloud sandbox"},
+    {"start": 46, "end": 54, "energy": "climax",    "note": "The all-new Minara V2"},
+    {"start": 54, "end": 60, "energy": "outro",     "note": "end card + logo"}
+  ],
+  "sfx": [
+    {"t": 0.1,  "type": "sparkle", "dur": 1.25},
+    {"t": 1.35, "type": "bell", "note": 81},
+    {"t": 5.9,  "type": "typing", "chars": 28, "cps": 22},
+    {"t": 7.32, "type": "tap"}, {"t": 9.9, "type": "tap"}, {"t": 11.55, "type": "tap"}, {"t": 13.3, "type": "tap"},
+    {"t": 10.15, "type": "success", "gain": 0.7},
+    {"t": 19.2, "type": "typing", "chars": 77, "cps": 26},
+    {"t": 22.51, "type": "tap"},
+    {"t": 25.35, "type": "blips", "count": 14, "step": 0.13, "note": 64},
+    {"t": 27.3,  "type": "blips", "count": 8,  "step": 0.13, "note": 72},
+    {"t": 28.9, "type": "tap"},
+    {"t": 29.4, "type": "success"},
+    {"t": 35.3, "type": "notify"},
+    {"t": 41.0, "type": "whoosh"},
+    {"t": 44.75, "type": "thud"},
+    {"t": 48.1, "type": "bell", "note": 81}
+  ],
+  "duck_db": -8
+}

@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- Keyframe source page. One <section class="k" id="K1"> per keyframe; ?k=K1 shows that frame.
+     Copy to docs/keyframes/<topic>/source.html, fix the font path, redraw the UI large (see SKILL.md). -->
+<html lang="en"><head><meta charset="utf-8"><title>Keyframes</title>
+<style>
+@font-face{font-family:'Geist';src:url(../../../assets/geist-500.woff2) format('woff2');font-weight:500}
+@font-face{font-family:'Geist';src:url(../../../assets/geist-700.woff2) format('woff2');font-weight:700}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#F2F2F2;color:#15171A;
+  font-family:'Geist',system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums}
+.k{display:none;position:absolute;inset:0}.k.on{display:block}
+.tag{position:absolute;right:40px;bottom:26px;font-size:20px;color:#9a9a9a}   /* "Illustrative data" */
+.card{position:absolute;background:#15171A;color:#fff;border-radius:28px}
+.ost{position:absolute;font-weight:700;letter-spacing:-0.02em}               /* on-screen text overlay */
+</style></head><body>
+
+<section class="k" id="K1">
+  <div class="card" style="left:240px;top:160px;width:1440px;height:760px"></div>
+  <div class="ost" style="left:240px;top:60px;font-size:64px">Just ask.</div>
+  <div class="tag">Illustrative data</div>
+</section>
+
+<section class="k" id="K2">
+  <div class="card" style="left:480px;top:200px;width:960px;height:680px"></div>
+</section>
+
+<script>
+var id=new URLSearchParams(location.search).get('k')||'K1';
+(document.getElementById(id)||document.querySelector('.k')).classList.add('on');
+</script>
+</body></html>

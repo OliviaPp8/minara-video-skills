@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Case 1 · test</title>
+<style>
+html,body{margin:0;height:100%;background:#1b1b1b;font-family:system-ui,sans-serif;color:#ddd}
+.bar{height:44px;display:flex;align-items:center;gap:8px;padding:0 12px;background:#111;font-size:13px}
+.bar button{background:#2a2a2a;color:#eee;border:0;border-radius:6px;padding:6px 10px;cursor:pointer}
+#seek{flex:1}
+#stat{font-variant-numeric:tabular-nums;min-width:200px}
+.wrap{position:absolute;top:44px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.scaler{width:1080px;height:1920px;transform-origin:center center;flex:none}
+iframe{width:1080px;height:1920px;border:0;background:#fff}
+</style></head><body>
+<div class="bar"><button onclick="play()">▶</button><button onclick="pause()">⏸</button><button onclick="reset()">↺</button>
+<button onclick="step(-1)">◀帧</button><input type="range" id="seek" min="0" max="1000" value="0"><button onclick="step(1)">帧▶</button><span id="stat">--</span></div>
+<div class="wrap"><div class="scaler" id="sc"><iframe id="fr" name="fr"></iframe></div></div>
+<script>
+var FPS=30,DUR=48.6 /* 改成本片时长 */,dragging=false,fr=document.getElementById('fr'),seek=document.getElementById('seek'),stat=document.getElementById('stat');
+fr.src='index.html?v='+Date.now();
+function fit(){var w=innerWidth,h=innerHeight-44,s=Math.min(w/1080,h/1920)*0.98;document.getElementById('sc').style.transform='scale('+s+')';}
+addEventListener('resize',fit);fit();
+function tl(){try{return fr.contentWindow.__timelines.main;}catch(e){return null;}}
+function fmt(t){var f=Math.round(t*FPS);return (''+Math.floor(t/60)).padStart(2,'0')+':'+(''+Math.floor(t%60)).padStart(2,'0')+':'+(''+(f%FPS)).padStart(2,'0')+' · '+t.toFixed(2)+'s · f'+f;}
+function loop(){var r=tl();if(r){if(!dragging)seek.value=Math.round(r.time()/DUR*1000);stat.textContent=fmt(r.time());if(r.time()>=DUR)r.pause();}requestAnimationFrame(loop);}
+function play(){var r=tl();if(r){if(r.time()>=DUR-0.01)r.time(0);r.play();}}
+function pause(){var r=tl();if(r)r.pause();}
+function reset(){var r=tl();if(r)r.pause(0);seek.value=0;}
+function step(d){var r=tl();if(!r)return;r.pause();var n=Math.min(DUR,Math.max(0,r.time()+d/FPS));r.time(n);seek.value=Math.round(n/DUR*1000);}
+seek.oninput=function(){var r=tl();if(!r)return;r.pause();r.time(seek.value/1000*DUR);};
+seek.onmousedown=function(){dragging=true;};onmouseup=function(){dragging=false;};
+(function wait(){var r=tl();if(r){loop();r.play();}else setTimeout(wait,200);})();
+</script></body></html>

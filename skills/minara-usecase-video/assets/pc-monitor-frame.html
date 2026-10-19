@@ -1,0 +1,23 @@
+<!-- PC use case: monitor frame behind the 1440×810 app.
+     Drop the CSS into the composition's <style> and wrap #app as below (inside #cam).
+     Geometry (1920×1080 frame): screen = 1440×810 pt × K 1.15 = 1656×931.5 px,
+     bezel 14 px, monitor outer 1684×959.5 at left 118 / top 24, stand below.
+     So in JS: K = 1.15, OX = 132, OY = 38 (screen top-left in frame px). -->
+<style>
+#monitor { position: absolute; left: 118px; top: 24px; width: 1684px; height: 959.5px; border-radius: 26px;
+  background: linear-gradient(180deg, #1C1D20 0%, #0E0F11 100%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.08), 0 50px 120px rgba(0,0,0,0.6); }
+#screen { position: absolute; left: 14px; top: 14px; width: 1656px; height: 931.5px; border-radius: 12px; overflow: hidden; background: #000; }
+#screen #app { position: absolute; left: 0; top: 0; width: 1440px; height: 810px; transform: scale(1.15); transform-origin: 0 0; }
+#stand-neck { position: absolute; left: 885px; top: 983.5px; width: 150px; height: 64px;
+  background: linear-gradient(180deg, #121315 0%, #2A2B2F 55%, #1A1B1E 100%);
+  clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%); }
+#stand-base { position: absolute; left: 820px; top: 1046px; width: 280px; height: 12px; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, #34353A 0%, #1B1C1F 100%); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+</style>
+
+<div id="cam">
+  <div id="stand-neck"></div><div id="stand-base"></div>
+  <div id="monitor"><div id="screen"><div id="app"><!-- product UI --></div></div></div>
+  <!-- cursor / overlays that follow the app stay inside #cam, positioned with OX + x*K, OY + y*K -->
+</div>

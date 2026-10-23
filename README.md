@@ -1,6 +1,6 @@
 # Minara video skills
 
-Six [Claude Code](https://claude.com/claude-code) skills for making product videos end to end: script, picture, voiceover, music. They were built for Minara's launch, promo and tutorial films, and they encode one team's rules (brand palette, Geist type, a signature ease, 2K 60fps delivery). Fork them and swap in your own rules.
+Seven [Claude Code](https://claude.com/claude-code) skills for making product videos end to end: script, picture, voiceover, music, cover. They were built for Minara's launch, promo and tutorial films, and they encode one team's rules (brand palette, Geist type, a signature ease, 2K 60fps delivery). Fork them and swap in your own rules.
 
 | Skill | What it does |
 |---|---|
@@ -10,8 +10,9 @@ Six [Claude Code](https://claude.com/claude-code) skills for making product vide
 | [`minara-guide-video`](skills/minara-guide-video/SKILL.md) | Adds voiceover and captions to a screen recording you supply (uses a separate `caption-recording` skill for the mechanics, not included). |
 | [`minara-voiceover`](skills/minara-voiceover/SKILL.md) | Cuts a narration recording into the script's lines, places each one at its scripted time, mixes it into the video and checks every line lands on time. |
 | [`minara-music`](skills/minara-music/SKILL.md) | Generates BGM and synced sound effects locally from the script's cue sheet (numpy synth, deterministic), ducked under the voiceover. |
+| [`video-cover`](skills/video-cover/SKILL.md) | Makes the cover from the script in your brand kit's own fonts, colours and logo: logo, one title, one key visual, no small text. Exports 2560×1440 + 1280×720 with an overlap check, and can put the cover on the film's first 0.1s. |
 
-Typical order: `minara-videoscript` → `minara-video` or `minara-usecase-video` → `minara-voiceover` → `minara-music`.
+Typical order: `minara-videoscript` → `minara-video` or `minara-usecase-video` → `minara-voiceover` → `minara-music` → `video-cover`.
 
 ## Install
 
@@ -26,7 +27,7 @@ Then call them in Claude Code, e.g. `/minara-videoscript`.
 ## Requirements
 
 - `ffmpeg` / `ffprobe`, Python 3 with `numpy`, Google Chrome (headless screenshots)
-- Node.js for HyperFrames (`npx hyperframes`)
+- Node.js for HyperFrames (`npx hyperframes`) and Playwright for `video-cover`
 - `whisper-cli` ([whisper.cpp](https://github.com/ggerganov/whisper.cpp)) and a model in `~/.cache/whisper/` for `minara-voiceover`
 
 ## Paths the skills expect

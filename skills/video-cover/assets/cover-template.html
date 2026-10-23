@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>{{TITLE_TEXT}} cover</title>
+<!--
+  Three elements only: the brand logo, the title and the key visual.
+  No label, subtitle, proof number or any other small text.
+  Fill every {{TOKEN}}. Paths are relative to this file (put it in <project>/cover/).
+  Every block the check should measure carries data-block="<name>".
+-->
+<style>
+@font-face { font-family: 'Display'; src: url('{{DISPLAY_FONT_WOFF2}}') format('woff2'); font-weight: 100 900; }
+:root {
+  --paper: {{PAPER}};   /* background */
+  --ink: {{INK}};       /* title */
+  --accent: {{ACCENT}}; /* product name in the title, nothing else */
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; background: var(--paper); overflow: hidden; }
+body { position: relative; color: var(--ink); font-family: 'Display', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+#logo  { position: absolute; left: 112px; top: 84px; height: 64px; }
+#image { position: absolute; left: 1010px; top: 90px; width: 910px; height: 900px; object-fit: contain; }
+
+/* vertically centred in the left column */
+#title { position: absolute; left: 112px; top: 50%; transform: translateY(-50%); width: 880px;
+         font-size: 190px; line-height: 0.94; letter-spacing: -0.055em; font-weight: 500; }
+#title .a { color: var(--accent); }
+</style>
+</head>
+<body>
+  <img id="logo" data-block="logo" src="{{LOGO}}" alt="{{BRAND}}">
+  <img id="image" data-block="image" data-allow-overlap src="{{KEY_IMAGE}}" alt="">
+  <!-- 2–4 words on two short lines; wrap the product name in .a -->
+  <div id="title" data-block="title">{{TITLE_LINE_1}}<br><span class="a">{{TITLE_LINE_2}}</span></div>
+</body>
+</html>

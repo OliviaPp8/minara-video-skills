@@ -1,6 +1,6 @@
 ---
 name: minara-video
-description: The operator's standard workflow for making Minara marketing / launch / demo videos. Built on the hyperframes skill, with a stricter process - confirm style → high-level storyboard → copy → build each scene separately → confirm a per-second script → iterate on a local test page → render only once the user is satisfied.
+description: The operator's standard workflow for making Minara marketing / launch / demo videos. Built on the hyperframes skill, with a stricter process - confirm style → high-level storyboard → copy → build each scene separately → confirm a per-second script → iterate on a local test page → render only once the user is satisfied. Product screens are rebuilt in HTML, with screen recordings / screenshots used only as reference; recording frames never go into the film.
 ---
 
 # /minara-video
@@ -16,6 +16,17 @@ This is the operator's standard operating procedure for Minara videos, distilled
 
 > **⚠️ Route first: this is the workflow for HyperFrames composited motion videos (marketing / launch / demo, where every frame is built in code).**
 > If the task is a **product guide / tutorial video** - the operator **records the screen themselves** and you only add voiceover + captions and deliver - use the **`minara-guide-video`** sub-skill, not this one. How to tell: is there an existing screen recording / is the ask "add voiceover and captions to this recording"? The two differ in voice, captions, and delivery.
+
+## Compliance: never say "invest"
+
+Do not use **invest / investing / investor(s) / investment(s)** (or **投资 / 投资者** in Chinese copy) anywhere in the copy this skill produces: scripts, voiceover, on-screen text, titles, subtitles, descriptions, tags, posts, replies, emails, CTAs, alt text. The word can read as investment advice and creates compliance risk. Say what the user actually does instead:
+
+- "Ask Minara how to trade NVDA after earnings", not "invest in NVDA"
+- "Ask which stocks look undervalued", not "find stocks to invest in"
+- "traders" / "users", not "investors"; "trading ideas" / "market analysis", not "investment ideas"
+- Risk lines say "Not financial advice", not "not investment advice"
+
+The only exception is a third-party proper noun cited as a source (for example a company's "Investor Relations" page in a citation link). Never use the word in Minara's own voice. Check the final copy for these words before handing it over.
 
 ## ⛔️ Startup prerequisite: load HyperFrames + video-shotcraft (mandatory)
 
@@ -71,12 +82,52 @@ After the per-second script is confirmed, use the `minara-music` skill to write 
 
 ## 📱 UI scene rule - large UI, minimal, do not copy the product (set by the operator, 2026-07-03; global)
 
-When a "product interface" appears in a video, **do not copy the product UI pixel for pixel**. Product screenshots are only a **content reference** (what data and features exist); redo all of the visuals:
+When a "product interface" appears in a video, **do not copy the product UI pixel for pixel**. Product screenshots and screen recordings are only a **content reference** (what data and features exist); redo all of the visuals in HTML (see the 🎞️ rule below - no recording frames or screenshots in the film):
 
 - **Large UI**: design for **watching the video on a phone** - viewers watch on a small screen, where small text and dense grids are unreadable. Body ≥28px, titles ≥48px, key numbers huge (80-140px), at most 3-5 elements per screen.
 - **Simple, spacious, minimal, clean**: cut secondary details from the product (small labels, dense columns, helper rows, clusters of small icons). One card says one thing; leave plenty of whitespace.
 - **Font is always Geist** - whatever font the product interface uses (even if the product hero is serif), the video uses Geist throughout. This echoes the font rule at the top.
 - Source: the 2026-07-03 SS2.0 copy-trading video, where I copied the Studio web UI (small text, dense tables + PT Serif hero) and they threw it all out and had it redone.
+
+## 🎞️ Screen recordings are reference only - rebuild every product screen in HTML (set by the operator, 2026-11-13; global)
+
+Use the operator's screen recordings and screenshots to learn **what the product does** - the real flow, layout, UI copy, states, data and timing. **Never put a recording, a frame grabbed from it, or a screenshot into the final film.** Recording frames are not sharp enough for a 2K / 4K export (compression blur, small text, scaling artefacts) and they break the Minara film look. Every product screen in the film is rebuilt in HTML / CSS in the composition.
+
+**What the recording is used for**
+
+| Take from the recording | How it goes into the film |
+|---|---|
+| Steps and their order, what is clicked / typed | The scene order and the actions in the per-second script |
+| UI copy (buttons, labels, messages) | Typed into the HTML word for word (check against the frontend code / i18n when available) |
+| Layout and components (where things sit, what appears after what) | Rebuilt as DOM in Geist, then simplified per the 📱 UI scene rule (large UI, 3-5 elements per screen) |
+| States and data (loading, streaming answer, filled form, result numbers) | Real values rebuilt as text / SVG / CSS; charts redrawn as SVG paths |
+| Rough timing (how long the agent thinks, when the result shows) | A starting point for the per-second script; compress or stretch for pacing |
+| Icons, logos | Use the real SVG / PNG asset files (brand folder, product repo, FMP stock logos), never a crop from the recording |
+
+**How**
+
+1. **Collect.** Ask for the recording(s) at the start if the film shows product UI. Keep them in `<project>/references/recordings/`, never in `assets/`.
+2. **Extract reference stills.** Use the frame extractor from `minara-usecase-points`:
+   ```bash
+   python3 -I <minara-usecase-points skill>/scripts/extract_frames.py <recording.mp4> <project>/references/frames
+   ```
+   It writes one still per scene change plus `contact.png` and `index.tsv` (time of each still). Read the contact sheet, then the stills you need.
+3. **Write down what each screen shows** (copy, components, states, numbers) next to the storyboard row / per-second script it belongs to. Note anything unreadable in the recording and check it in the code or ask - do not guess blurry text.
+4. **Rebuild in HTML** in Step 5. Sharp vector type and shapes at any zoom, so camera push-ins stay crisp.
+5. **Check side by side** on the test page: rebuilt frame next to the reference still at the same moment - same flow, same copy, same states; the look follows the Minara film style, not the recording's pixels.
+
+**Not allowed in the final composition**
+
+- `<video>` / `<img>` / CSS `background-image` pointing at a recording, a frame from it, or a product screenshot (including blurred or dimmed "background" use, picture-in-picture and device-frame fills).
+- Tracing text or numbers you could not read in the recording.
+- Exception: only when the operator explicitly asks for real footage in that job (e.g. "这段用录屏"). Say in the plan which shot uses it and why.
+
+**Before render**, search the project for media references and make sure none point at `references/`, a recording or a screenshot:
+```bash
+grep -rnoE '(src|href)="[^"]+\.(mp4|mov|webm|png|jpe?g|webp)"|url\([^)]+\)' <project>/*.html | grep -vE '["(]\.?/?assets/'
+grep -rn 'references/' <project>/*.html
+```
+Anything left must be an asset made for the film (logo, avatar, icon, generated texture), not product footage.
 
 ## 🚫 Visual storytelling rule - no stray text (set by the operator, 2026-07-03; global)
 
@@ -111,7 +162,7 @@ In practice:
 
 ## 🌀 Signature elastic ease - implementation details (required in every film)
 
-> The Custom bezier the operator fixed in Figma on 2026-07-03: **`0.95, 0.03, 0, 0.98`** (the "Curve" tab, not "Spring"). Source: the Strategy Studio 2.0 film. This is the **default motion curve** for Minara videos and applies to all animation.
+> The Custom bezier the operator fixed in Figma on 2026-07-03: **`0.95, 0.03, 0, 0.98`** (the "Curve" tab, not "Spring"). Source: the `跟单milestone视频` (Strategy Studio 2.0) project. This is the **default motion curve** for Minara videos and applies to all animation.
 
 **Curve shape**: long flat start (P1=`0.95,0.03` pulls the handle to the bottom right → slow, building start) → steep middle (instant high speed) → flat end (P2=`0,0.98` pulls the handle to the top left → gentle settle). Extreme ease-in-out, **no overshoot** (both Y values within 0–1). Feel: "tense for a beat, whoosh across, settle firmly". Typical duration **0.8–1.1s** (in their demo video, a vertical bar grows into place in about 1.0s).
 
@@ -131,7 +182,7 @@ gsap.defaults({ ease: "minaraSnap", duration: 0.9 });
 transition: all 1s cubic-bezier(0.95, 0.03, 0, 0.98);
 ```
 
-**Verification page**: a scratch page (draws the curve + a vertical bar growing along it, for visual comparison against the reference motion clip).
+**Verification page**: `scratchpad/_ease-verify/index.html` (draws the curve + a vertical bar growing along it, for visual comparison against their `弹性动效示范.mp4`).
 
 ## ⚠️ Business constraints (must check whenever strategies are shown)
 
@@ -261,6 +312,7 @@ The template goes in `references/scene-template.html` (to be added; for now refe
 
 Key HyperFrames composition rules (see the `hyperframes` skill for details):
 
+- product screens are rebuilt as DOM / SVG from the reference stills in `references/frames/`; never `<img>` / `<video>` a recording or screenshot (see the 🎞️ rule)
 - `<div data-composition-id="root" data-width="1920" data-height="1080" data-start="0" data-duration="<seconds>">`
 - timeline `paused: true`
 - register `window.__timelines["root"] = tl`
@@ -395,6 +447,7 @@ Agent({
   ```
   Do not upscale 1080p directly to 2K (it looks soft).
 - **Check with ffprobe before delivery**: `ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate -of csv=p=0 <mp4>` must return `2560,1440,60/1` (or `1440,2560,60/1`). The `-4k` master is an intermediate file and is not delivered.
+- **Keep one video per deliverable, to save disk (the operator, 2026-10-27)**: once the 2K file passes the ffprobe check, delete the `-4k` master (`rm output/<slug>-vN-4k.mp4`). Scene mp4s for editing stay clean (no cover). For the delivered film, the cover version is the only file kept; see the cover section below.
 - The test page scrubber and timecode still read at 30fps (for communication); this does not affect the export frame rate.
 
 **Version number habit**: mp4 output file names carry a version number (`-2`, `-3`, `-4` suffix), so the operator's video editor sees a new file instead of a cached one. Example: `scene-backtest-preview-4.mp4`.
@@ -402,6 +455,23 @@ Agent({
 **Final videos all go into `output/` (set by the operator, 2026-07-03)**: for multi-scene projects, after each render, `cp` **the latest mp4 of each scene** into the `output/` folder at the project root (old versions stay in each scene's directory). At delivery, `open -R` to highlight `output/`; do not make them dig through a dozen scene subdirectories.
 
 After rendering, use `open -R` to highlight the file in Finder so the operator can drag it straight into the video editor.
+
+## 🖼️ Cover on the first frame (set by the operator, 2026-10-21; every delivered film)
+
+After the final render, make a cover with **`/video-cover`** (title from the script, brand from the brand kit / site the operator names) and put it on the film's first frames, so X / Telegram / Discord / players that use the first frame as the thumbnail show the cover:
+
+```bash
+<video-cover skill>/scripts/prepend_cover.sh output/<slug>-vN.mp4 output/<slug>-cover-2560x1440.png output/<slug>-vN-cover.mp4 0.1
+# from a 4K master that still exists: ... <slug>-vN-4k.mp4 ... 0.1 2560x1440
+# after the checks below pass: keep only the cover version
+rm -f output/<slug>-vN-4k.mp4 output/<slug>-vN.mp4
+```
+
+- **Very short hold: 0.1s** (6 frames at 60fps); never more than 0.2s. The audio is delayed by the same 0.1s, so BGM and SFX stay on their beats; nothing in the composition is retimed.
+- The cover is a separate still, not a scene: don't add it to the composition or the per-second script, and don't change `data-duration`.
+- Verify before delivery: frames 0–5 = cover, frame 6 = the film's frame 0, duration = film + 0.1s, `ffprobe` still `2560,1440,60/1`, audio onset moved by 0.1s (`silencedetect`).
+- **Deliver only `<slug>-vN-cover.mp4`** (the operator, 2026-10-27, to save disk): once it passes the checks, delete the 4K master and the clean `<slug>-vN.mp4`. Put it in `output/` with the cover PNGs. Do any voiceover / music mux on the clean file *before* prepending the cover; the clean file is deleted only after the final cover version is made. If a clean copy is needed later (YouTube custom thumbnail, re-edit), cut the first 0.1s off the cover version or re-render.
+- First used on a launch film (2026-10-21).
 
 ## The operator's firm habits
 
@@ -414,7 +484,7 @@ These are hard rules learned from past problems; do not try to talk them out of 
 5. **When they send a screenshot + say "this is the style I mean" = match the image pixel for pixel**. Not "close enough".
 6. **"放大特写" (zoom-in close-up) means a very large close-up by default**: make the specified subject the sole compositional center, push the camera in a long way so the subject takes up most of the frame, and let all other elements, components, and device bezels run off the canvas and get cropped. Do not shrink the close-up to keep the full UI, full card, or all four phone edges in frame, and do not read it as a slight zoom where "everything stays in frame". Choose the zoom factor by how much of the frame the subject should finally fill; use 2.5×–4× or more if needed.
 
-## Reusable motion recipes (from an earlier promo, 2026-06-24)
+## Reusable motion recipes (from crypto-subscription-back, 2026-06-24)
 
 Signature effects used again and again in "product UI demo" shorts (simulated tap → modal → success → ending); copy them directly:
 
@@ -440,11 +510,11 @@ From `hyperframes/minara-autopilot-mobile`. Structure: **the completed state get
 
 > A scene html is a `paused` composition; opened directly in a browser it is a black screen, so it must be wrapped. Pitfalls hit while self-verifying with playwright on this machine:
 
-1. **Where the playwright module is**: it isn't installed globally on this machine; it's hidden in `~/.npm/_npx/<hash>/node_modules/playwright`. **ESM does not read NODE_PATH**, so write a `.cjs` and use an absolute path: `require('$HOME/.npm/_npx/e41f203b7505f1fb/node_modules/playwright/index.js')` (the hash may change; run `ls -d ~/.npm/_npx/*/node_modules/playwright` first).
+1. **Where the playwright module is**: it isn't installed globally on this machine; it's hidden in `~/.npm/_npx/<hash>/node_modules/playwright`. **ESM does not read NODE_PATH**, so write a `.cjs` and use an absolute path: `require('$HOME/.npm/_npx/<hash>/node_modules/playwright/index.js')` (the hash may change; run `ls -d ~/.npm/_npx/*/node_modules/playwright` first).
 2. **`waitUntil:'networkidle'` hangs forever**: because the composition loads the `gsap.min.js` CDN, the connection is never idle → networkidle never fires → `waitForFunction` times out. **Use `waitUntil:'load'` + polling** for `window.__timelines.root` (`for(i<40){await waitTimeout(500); if(evaluate(()=>!!root))break;}`).
 3. **Native-resolution screenshots**: inject the scene into a standalone document (wrapped in `<div class="stage">1920×1080 relative overflow:hidden</div>`), set the viewport to 1920×1080, seek with `tl.pause(); tl.time(t)`, then screenshot; shrink large images with `sips -Z 1280` before Reading them.
 4. **Interactive preview page**: an iframe pointing at the standalone scene + `.scaler transform:scale()` to fit the window + Play/Reset buttons + polling on onload to get `iframe.contentWindow.__timelines.root` and call `.restart()`. Port 4093; before starting a new one, `lsof -ti:4093|xargs kill -9`. After changes, reload with `?v=N` added to the iframe `src` as a cache-bust (python http.server returns 304 from cache, and the operator would see the old version).
-5. **`<script src="gsap.min.js">` is unreliable under file://** (headless sometimes doesn't execute it → `window.gsap` undefined → timeline not registered). **Most reliable: inline the full gsap source into the standalone's `<script>…</script>`** (`curl` a copy of gsap.min.js through a proxy if needed, save it locally, read it with python and inline it). This makes screenshots fully independent of the CDN.
+5. **`<script src="gsap.min.js">` is unreliable under file://** (headless sometimes doesn't execute it → `window.gsap` undefined → timeline not registered). **Most reliable: inline the full gsap source into the standalone's `<script>…</script>`** (`curl` a copy of gsap.min.js through proxy 7890, save it locally, read it with python and inline it). This makes screenshots fully independent of the CDN.
 6. **Measure centering/alignment programmatically; don't rely on your eyes**: after seeking to the target frame, compute the element center with `getBoundingClientRect()` and compare it to the frame center (960/540). The operator spots offsets of a few dozen px at a glance ("crooked" / "not centered"); visual re-checks are unreliable - confirm `centerX≈960` with numbers.
 
 ## Composition structure pitfalls (apply to every film)
@@ -473,11 +543,11 @@ Once installed in the default cache directory it is found automatically; run `np
 
 - **render needs a full-document `index.html` in the project**; passing only `-c <scene.html>` fails with `No index.html file found` (CLI v0.7.5 requires the scaffold even with `-c`).
 - If the scene file is only a composition fragment (directly `<div data-composition-id="root">…</div>`, no `<html>/<head>/<body>`), **first wrap it as a full document and save it as `index.html`**: `<!doctype html><html><head><style>html,body{margin:0;background:<bg>}</style></head><body>{scene}</body></html>`.
-- Then `cd project && HTTPS_PROXY=http://<your-proxy> HTTP_PROXY=... npx hyperframes render --output name-vN.mp4` (**don't pass `-c`; render index.html directly**; render needs network access to pull the GSAP CDN, so the proxy is required).
+- Then `cd project && HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=... npx hyperframes render --output name-vN.mp4` (**don't pass `-c`; render index.html directly**; render needs network access to pull the GSAP CDN, so the proxy is required).
 - Multiple files with `data-composition-id` in the directory produce a `multiple_root_compositions` warning, which is non-blocking; lint warnings like transform conflicts / Google Fonts import are also non-blocking.
 - Run render in a subagent (30-150s); in the main thread, first `lsof -ti:4093|xargs kill` to stop the test server. When done, `open -R` to highlight.
 
-## 🎬 Full-film production lessons (from a 9-scene strategy film, 2026-06-26, must read)
+## 🎬 Full-film production lessons (from the 9-scene Cross-Sectional Factors film, 2026-06-26, must read)
 
 Made a complete ~37s marketing film (opening + factor card wall + natural-language strategy generation + logo asset wall + results panel + deposit and deploy + ending), 9 separate scenes, plus a full Chinese version. Below are the new lessons from this whole production line, **more systematic than the scattered items above**.
 
@@ -501,7 +571,7 @@ Made a complete ~37s marketing film (opening + factor card wall + natural-langua
 - Everything uses mulberry32 with a fixed seed, deterministic and renderable.
 
 ### E. Stock logos: Clearbit is dead; use FMP, and always check for blank images
-- **The Clearbit logo API is down** (returns empty). Working source: **`https://financialmodelingprep.com/image-stock/<TICKER>.png`** (fetch by ticker, no key needed, through a proxy if needed).
+- **The Clearbit logo API is down** (returns empty). Working source: **`https://financialmodelingprep.com/image-stock/<TICKER>.png`** (fetch by ticker, no key needed, through proxy 7890).
 - **FMP returns a white/blank placeholder PNG for some tickers** (BB/HIMS/MRVL in this film). After downloading you **must scan them**: compute the non-white ratio with PIL; <2% means blank, drop it.
 - Non-standard-US tickers (SK Hynix/Samsung/DRAM/CBRS/RKLB) can't be fetched from FMP → ask the operator for the image, or fall back to a gray letter monogram.
 - **Uniform round logos**: `.logo{width:Npx;height:Npx;border-radius:50%;object-fit:cover;background:#fff;border:1px solid #EEE}` - transparent logos sit on a white circle, square-background logos fill out into a colored round badge, all tidy.
@@ -529,7 +599,7 @@ Made a complete ~37s marketing film (opening + factor card wall + natural-langua
 - **Deposit → deploy → wallet growth** (scene5): success toast (green check; copy says only "arrived", not "arrived in 2 seconds" - it isn't actually that fast), Deploy→Live green pill, balance count-up (`tl.to({v:start},{v:end,onUpdate})`) + rising sparkline.
 - **Ending bookend**: the same green dot-matrix mp4 background + avatar as the opening; three lines (brand name in regular weight / slogan in bold / minara.ai) appearing in stages per timecode; the operator prefers **an all-black, no-gradient, no-background, no-arrow minimal CTA**.
 
-## 🧩 UI micro-interaction demo promo lessons (from a feature promo, 2026-07-08, must read)
+## 🧩 UI micro-interaction demo promo lessons (max-mode-promo, 2026-07-08, must read)
 
 When making "product UI micro-interaction → brand CTA" short promos (this film: mode menu pops out a third Max tab + shine sweep → light Gaussian-blur CTA), these **reusable hard lessons** came up:
 
@@ -561,30 +631,30 @@ When making "product UI micro-interaction → brand CTA" short promos (this film
 
 ### G. Self-verification workhorse = `__timelines.root.pause(t)` + playwright
 - `playwright-cli goto 'http://127.0.0.1:PORT/index.html?v=timestamp'` → `eval "()=>{__timelines.root.pause(t); ...}"` to freeze a frame + measure rects + screenshot → `sips -Z 1500` then Read. For pixel-level requirements, always use eval to measure rects and get numbers. ⚠️ The first eval after `goto` occasionally returns empty; send it again.
-- `file://` is blocked by playwright; start `python3 -m http.server`; when verifying with curl, add `--noproxy '*'` (a local proxy proxies localhost and causes 502).
+- `file://` is blocked by playwright; start `python3 -m http.server`; when verifying with curl, add `--noproxy '*'` (the local 7890 proxy proxies localhost and causes 502).
 
 ### H. This film's final form (reusable reference)
 - A single 9s composition; `index.html` = the whole film (5s menu demo + 4s light frosted CTA); short promos are not split into scenes.
 - **Seamless shine technique** (reusable) = one linear gradient with a **symmetric tile** (`background-size:50% 100%` repeat + animate `--shift`), a seamless loop that replaces the forbidden `repeat:-1`. ⚠️ At the time it used the brand purple-pink-orange band; **that gradient has been removed (2026-09-02)**; reuse only the tile/shift technique, with the color changed to a grayscale white→transparent band.
 - Gaussian-blur ending = menu `filter:blur(46px)` + `.landing` frosted overlay + `backdrop-filter:blur(10px)` fade-in + round avatar popping in with `back.out(1.7)` + per-character title. ⚠️ The original frost used cream `rgba(250,249,245,0.55)`, **removed**; use semi-transparent dark gray/black instead.
 
-## 🧿 Metaphorical product scene lessons (from a product-mode explainer scene, 2026-09-05, must read)
+## 🧿 Metaphorical product scene lessons (Harness S30 Proactive Mode redo, 2026-09-05, must read)
 
-**Background**: the first version of the scene was a "component walkthrough" - template card → suggestion modal → mandate card → pending approval list, small-text dark panels on a light background. The operator rejected it in one sentence: "Don't use that output, I don't like it." The new direction they gave was three phrases: **make the core components metaphorical · express the core interaction simply · soft easing with elasticity**. The redo went through storyboard → test page → three renders in one day, all approved on the first pass. Below is the method settled in this round; apply it directly to future MG scenes that "explain a product mode/concept".
+**Background**: the first version of S30 was a "component walkthrough" - template card → suggestion modal → mandate card → pending approval list, small-text dark panels on a light background. The operator rejected it in one sentence: "There's a local s30 output - don't use that, I don't like it." The new direction they gave was three phrases: **make the core components metaphorical · express the core interaction simply · soft easing with elasticity**. The redo went through storyboard → test page → three renders in one day, all approved on the first pass. Below is the method settled in this round; apply it directly to future MG scenes that "explain a product mode/concept".
 
 ### A. Produce a storyboard collage before writing a line of code
 - What they wanted was **to see a storyboard collage of 8 key frames first**, not the motion first. How: one HTML page, each frame a real CSS-drawn 1920×1080 stage scaled to 0.38, with timecode / voiceover line / action notes (easing, elasticity, what comes first and what comes next), and 4 design principles listed at the top of the page. Take one full-page PNG with Playwright and highlight it with `open -R`; **do not open the web page automatically**.
-- After viewing, they only said "you can generate the test page for me to look at" and it went straight to compositing - a frame-accurate storyboard means no starting over later. A storyboard collage is a review tool, not a video, so the video palette doesn't apply to it.
+- After viewing, they only said "you can generate the test page for me to look at" and it went straight to compositing - a frame-accurate storyboard means no starting over later. Template from this round: `harness-launch-video/scenes/s30-proactive-mode-v2/storyboard-v2.html` (cream paper feel, Figtree, card style; it's a review tool, not a video, so the video palette doesn't apply).
 
 ### B. How to "make it metaphorical" = four progressive layers, no client pages
 1. **Capability tiles**: make the capabilities being combined (Research / Strategies / Automation / Memory) into square cards; each card = the client's Lucide icon + a 40px large label + **one typical UI component representing that feature** (search box + result bar / return curve / connected nodes / memory row + check). Their reference was a bento grid (2×2 squares, large radius 32, gap 28, cards 400×400). The components' micro-animations run during the hold, so the hold isn't dead.
 2. **Converge → core object**: the cards shrink to 0.6 along the signature curve into the center; at the moment of collapse a `target` tile pops out + two pulse rings, and the title uses the already-approved BlurText per-letter syntax.
-3. **The core object becomes part of a real component**: the `target` tile shrinks via transform into the real core element (ring + dot) inside the product's card component, then its fields grow out one by one - **this is "object identity": the viewer sees the big metaphor become a small part in the product**.
-4. **Boundary = card border**: when explaining "hard boundaries", a 3px white line draws the group's outer frame in one stroke clockwise from the top left (`stroke-dasharray/dashoffset` + `pathLength=1000`), and the card background emerges with the line - **components arrive first, background last** (the operator already set this in S08). Then the whole group collapses via transform into the client's real card geometry, the state flips to Active, and a green pulse **is clipped at the card edge** = "active, but only within the authorized scope", with no words needed.
+3. **The core object becomes part of a real component**: the `target` tile shrinks via transform into the real AgentCore (ring + dot) inside the MandateCard, then the mandate fields grow out one by one - **this is "object identity": the viewer sees the big metaphor become a small part in the product**.
+4. **Boundary = card border**: when explaining "hard boundaries", a 3px white line draws the group's outer frame in one stroke clockwise from the top left (`stroke-dasharray/dashoffset` + `pathLength=1000`), and the card background emerges with the line - **components arrive first, background last** (the operator already set this in S08). Then the whole group collapses via transform into the client's real MandateCard geometry, the state flips to Active, and a green pulse **is clipped at the card edge** = "proactive, but only within the authorized scope", with no words needed.
 
 ### C. "Minimal interaction" = zero mouse pointers in the whole film, one gesture per field
 - The selected state is a white pill that pops from one option to another with `x + scaleX`; the amount drops into place from 24px below; the risk bar is CSS variable `--k` dragged from 0.5→0.7 with `back.out(1.7)` (overshooting to 0.72 then back), and the legend number 50%→70% crossfades between two span layers; the autonomy level pill pops out and limit chips drop in one by one. **You understand the operation without watching the operation happen.**
-- Depth of field: the group currently growing is sharp; completed groups get `autoAlpha .5 + blur 1.4px`; once the boundary is drawn, everything returns to sharp = "the card becomes a whole".
+- Depth of field: the group currently growing is sharp; completed groups get `autoAlpha .5 + blur 1.4px`; once the boundary is drawn, everything returns to sharp = "the mandate becomes a whole".
 
 ### D. "Soft easing with elasticity" = three curves, each with one job
 - Elements landing/popping: `back.out(1.4)` (one light overshoot); emphasis gestures (risk knob, end point, check): `back.out(1.7~2)`.
@@ -608,11 +678,11 @@ When making "product UI micro-interaction → brand CTA" short promos (this film
 - **Image bytes often don't land on disk**: screenshots/reference images they paste in Claude Desktop repeatedly can't be retrieved as bytes and can't be saved to `references/user-images/`; each time, mention in the report "please send it again as a file".
 
 ### G. Copy discipline
-- Every word in a component must be an original client i18n string (from the client's `en/*.json` locale files), or an original voiceover line. When the client has no short label, take **the first half** of the original sentence  and flag it in the report for them to decide; words from the narrative doc ("risk boundaries, watchlists, decision style") may be used but must also be flagged.
+- Every word in a component must be an original client i18n string (`en/proactive.json`: goal.* / wizard.q1-3 / expectation.steady / card.* / autonomyControl.* / settingsForm.* / status.*), or an original voiceover line. When the client has no short label, take **the first half** of the original sentence (`Every action here runs in simulation`) and flag it in the report for them to decide; words from the narrative doc ("risk boundaries, watchlists, decision style") may be used but must also be flagged.
 
-## 🖥️ Client "growing / self-writing" shot lessons (from a launch film scene, v1→v6, 2026-09-04, must read)
+## 🖥️ Client "growing / self-writing" shot lessons (harness-launch-video S08 v1→v6, 2026-09-04, must read)
 
-The scene (the Minara client growing out of an empty field) went through 6 versions in one day: diagonal growth wave → components before background → openscreen elastic follow camera → four fixed camera positions → camera removed → compact UI + large text + 2× speed + mouse segment cut → **finally approved only after redoing it with the video-shotcraft `document-typewriter-reveal` card**. Below is what's actually reusable from this line.
+S08 (the Minara client growing out of an empty field) went through 6 versions in one day: diagonal growth wave → components before background → openscreen elastic follow camera → four fixed camera positions → camera removed → compact UI + large text + 2× speed + mouse segment cut → **finally approved only after redoing it with the video-shotcraft `document-typewriter-reveal` card**. Below is what's actually reusable from this line. The project is in `~/Documents/harness-launch-video/` (scene `scenes/s08-product-montage/`, fully logged in its `change-log.md`).
 
 ### A. The operator's settled views on "UI growing" shots (apply directly; stop trial and error)
 - **Components appear first, one at a time; the background and large frame appear last.** An empty blurred window appearing first = loading; they reject it at first sight.
@@ -660,13 +730,25 @@ The scene (the Minara client growing out of an empty field) went through 6 versi
 - Screenshots they paste in the desktop app **don't land on disk as bytes**; record a placeholder row in `references/user-images/INDEX.md` and ask them to resend as a file; do not pretend it was saved.
 - Delivery always includes: file path + numeric verification + frames decoded from the final video, highlighted with `open -R`; put the version number in the file name (`-v5-typewriter.mp4`).
 
+## Related memory (read as needed)
+
+- [[feedback-hyperframes-confirm-timeline]] - send a timeline for confirmation before changing durations
+- [[feedback-hyperframes-element-edit-workflow]] - structured element edits go through an isolated test page
+- [[feedback-hyperframes-studio-reload]] - studio caching is severe; must kill + reload + restart
+- [[feedback-hyperframes-no-agent-for-small-edits]] - small changes via Edit yourself; only render uses an agent
+- [[feedback-localhost-cleanup]] - kill the old port before starting a new one; the laptop overheats
+
 ## Source
 
 Distilled while making the `minara-strategy-studio-public` video on 2026-05-26 / 27. It had 7 scenes (opening, scene1-prompt, scene2-ui, scene-asset-grid, scene-backtest, scene-trades, scene6-deploy), and multiple rounds of iteration hit every pitfall listed above. The operator explicitly asked: "Write this up as a skill so this workflow runs automatically next time."
 
 ## Revision history
 
-- **2026-09-05** - Added **Client "growing / self-writing" shot lessons** (a launch film scene, v1→v6): the operator's settled views on UI growth shots (components before background, no own background while growing, camera pulls only once, compact UI + large text, durations carry across versions, read a named shot card first), the fixed method for translating video-shotcraft cards to HyperFrames (TEMPO card frames, clip-path, PageCam2D baked into keyframes, zoom ≥ 1, focus clamped to the canvas, focus on the combined center), the compact client + 1.5× font recipe and overflow walker, additional seek-accuracy pitfalls, engineering habits.
-- **2026-09-05** - Added "🧿 Metaphorical product scene lessons" (a product-mode explainer scene): storyboard collage first, four progressive metaphor layers (capability bento cards → converging object → becomes a part of a real component → boundary is the card frame), zero pointers with one gesture per field, three-curve division of easing, the 2s hold + tail compression pacing rule, engineering rules like `gsap_non_transform_motion`, i18n original-string copy discipline.
-- **2026-09-04** - Added a reference section for the **snapcn** local Remotion product-demo component library (cloned to `$VIDEO_WORKSPACE/snapcn/`), positioned as an on-demand reference for AI chat flow / prompt input / terminal / device frame shots, alongside Remocn; HyperFrames remains the default stack.
+- **2026-11-13** - Added **Screen recordings are reference only**: recordings / screenshots are used to learn the flow, copy, layout, states and timing (stills via `minara-usecase-points/scripts/extract_frames.py` into `references/frames/`), and every product screen is rebuilt in HTML; no recording frames or screenshots in the final film (not sharp enough), with a pre-render grep check. Exception only when the operator asks for real footage in that job.
+
+- **2026-10-21** - Added **Cover on the first frame**: cover made with `/video-cover`, put on the film's first 0.1s with `prepend_cover.sh` (audio delayed to match); deliver a clean and a `-cover` mp4.
+
+- **2026-09-05** - Added **Client "growing / self-writing" shot lessons** (harness-launch-video S08 v1→v6): the operator's settled views on UI growth shots (components before background, no own background while growing, camera pulls only once, compact UI + large text, durations carry across versions, read a named shot card first), the fixed method for translating video-shotcraft cards to HyperFrames (TEMPO card frames, clip-path, PageCam2D baked into keyframes, zoom ≥ 1, focus clamped to the canvas, focus on the combined center), the compact client + 1.5× font recipe and overflow walker, additional seek-accuracy pitfalls, engineering habits.
+- **2026-09-05** - Added "🧿 Metaphorical product scene lessons" (Harness S30 Proactive Mode redo): storyboard collage first, four progressive metaphor layers (capability bento cards → converging object → becomes a part of a real component → boundary is the card frame), zero pointers with one gesture per field, three-curve division of easing, the 2s hold + tail compression pacing rule, engineering rules like `gsap_non_transform_motion`, i18n original-string copy discipline.
+- **2026-09-04** - Added a reference section for the **snapcn** local Remotion product-demo component library (cloned to `claude playground/snapcn/`), positioned as an on-demand reference for AI chat flow / prompt input / terminal / device frame shots, alongside Remocn; HyperFrames remains the default stack.
 - **2026-09-02** - The operator instructed removing the **cream warm background** and the **brand purple-pink-orange gradient** (`#EB53FF/#FF538E/#FF9A32`) from this skill. Effects: the fixed style rules dropped the "warm" execution item and these two color rules; the default palette's primary text changed to pure white + a secondary gray was added; the touch ripple dropped brand pink; the Autopilot ending frost changed to dark gray; the seamless shine keeps only the tile/shift technique, not the brand color band; the design.md reading note marks that gradient as not used in videos. Historical pitfall records (the cream body color in the render bar symptom, the technical note that gradients can't be tweened) are kept as factual records. **Do not add these two back** unless the operator explicitly specifies it for that job.

@@ -2,7 +2,13 @@
   gsap.registerPlugin(CustomEase);
   CustomEase.create("minaraSnap", "M0,0 C0.95,0.03 0,0.98 1,1");
   gsap.defaults({ ease: "minaraSnap" });
-  var K = 1080 * 0.9 / 390, OX = 54, OY = 96;
+  // Pick the values for the film's display mode (SKILL.md §3 "Device display"):
+  //   phone device      K = 2.0,          OX = 150, OY = 116   (assets/phone-frame.html, app 390×844 pt)
+  //   phone full screen K = 1080 / 390,   OX = 0,   OY = 0     (app 390×693 pt fills 1080×1920)
+  //   PC monitor        K = 1.15,         OX = 132, OY = 74    (assets/pc-monitor-frame.html)
+  //   PC full screen    K = 1920 / 1440,  OX = 0,   OY = 0     (app 1440×810 pt fills 1920×1080)
+  //   legacy phone (before 2026-11-13: 90% screen, no body)  K = 1080 * 0.9 / 390, OX = 54, OY = 96
+  var K = 2.0, OX = 150, OY = 116;
   var $ = function (s) { return document.querySelector(s); };
   var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
 

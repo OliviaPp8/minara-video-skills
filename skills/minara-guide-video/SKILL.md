@@ -8,6 +8,17 @@ description: Create Minara product guide/tutorial videos from screen recordings 
 Use this for real Minara screen recordings. the operator records the product; add a detailed but concise
 English voiceover and captions. Load and follow the `caption-recording` skill for all mechanics.
 
+## Compliance: never say "invest"
+
+Do not use **invest / investing / investor(s) / investment(s)** (or **投资 / 投资者** in Chinese copy) anywhere in the copy this skill produces: scripts, voiceover, on-screen text, titles, subtitles, descriptions, tags, posts, replies, emails, CTAs, alt text. The word can read as investment advice and creates compliance risk. Say what the user actually does instead:
+
+- "Ask Minara how to trade NVDA after earnings", not "invest in NVDA"
+- "Ask which stocks look undervalued", not "find stocks to invest in"
+- "traders" / "users", not "investors"; "trading ideas" / "market analysis", not "investment ideas"
+- Risk lines say "Not financial advice", not "not investment advice"
+
+The only exception is a third-party proper noun cited as a source (for example a company's "Investor Relations" page in a citation link). Never use the word in Minara's own voice. Check the final copy for these words before handing it over.
+
 ## Required sequence
 
 1. Probe the new source. Rebuild its timeline even if an older walkthrough looks similar.
@@ -45,7 +56,7 @@ and copies cue-specific feedback back into chat.
 
 ## Delivery rule
 
-Do **not** send videos to any chat, channel or group by default. Send only when the operator
-explicitly requests it in the current task. If they say not to send, treat that as absolute.
+Do **not** send videos to Talos, Feishu, Discord, or any group by default. Send only when the operator
+explicitly requests it in the current task. If she says not to send, treat that as absolute.
 
-
+Project context: `$VIDEO_WORKSPACE/<tutorial-project>/`.

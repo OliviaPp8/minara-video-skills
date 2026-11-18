@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Minara BGM + SFX generator driven by a cue sheet (cues.json) written from the per-second script.
+Default style is minimal electronic / minimal tech, hit-synced to the film's cuts.
 
 Usage:
   make_music.py cues.json -o out_dir [--vo narration.wav]
@@ -8,15 +9,19 @@ Writes out_dir/bgm.wav (music + SFX, 48 kHz stereo). With a voiceover (--vo or "
 cue sheet) it also writes bgm-duck.wav (music ducked under speech, SFX untouched) and
 preview-mix.wav (ducked bed + voice) for listening. Fully local and deterministic (numpy only).
 
-Cue sheet (see examples/v2-launch.json):
+Cue sheet (see examples/minimal-tech.json; examples/v2-launch.json for the soft style):
 {
-  "duration": 60, "bpm": 120, "key": "A minor", "seed": 7,
-  "sections": [{"start": 0, "end": 5, "energy": "intro"}, ...],
+  "duration": 59, "bpm": 120, "key": "A minor", "seed": 23, "style": "minimal",
+  "sections": [{"start": 0, "end": 4, "energy": "intro"}, ...],
+  "cuts": [4, {"t": 18, "big": true}, ...],        (minimal only; default = every section start after 0)
   "sfx": [{"t": 7.3, "type": "tap"}, {"t": 5.9, "type": "typing", "chars": 28, "cps": 22}, ...],
-  "duck_db": -8, "vo": "assets/vo.wav"
+  "duck_db": -8, "vo": "assets/vo.wav",
+  "variation": false        (minimal only; true = each bar of a 4-bar phrase varies: chord-following sequence, fills)
 }
-energy: silent | intro | light | build | full | breakdown | climax | outro   (optional "level": 0.5-1.3)
-sfx type: tap | typing | success | notify | bell | blips | sparkle | riser | whoosh | thud | crash
+style: minimal (default) | soft (the V2 launch sound: warm pads, plucked arpeggio)
+energy: silent | intro | light | build | full | breakdown | climax | outro   (optional "level": 0.5-1.3;
+        minimal also takes "layers", e.g. "khrsp", to override the energy's layer set)
+sfx type: tap | typing | success | notify | bell | blips | sparkle | riser | whoosh | thud | crash | stab | hit
 """
 import argparse, json, sys, wave, subprocess
 from pathlib import Path
@@ -28,7 +33,11 @@ NOTES = {"C": 0, "C#": 1, "DB": 1, "D": 2, "D#": 3, "EB": 3, "E": 4, "F": 5, "F#
 SCALES = {"minor": [0, 2, 3, 5, 7, 8, 10], "major": [0, 2, 4, 5, 7, 9, 11]}
 PROGS = {"minor": [0, 5, 2, 6], "major": [0, 4, 5, 3]}      # i-VI-III-VII  /  I-V-vi-IV
 ENERGIES = {"silent", "intro", "light", "build", "full", "breakdown", "climax", "outro"}
-SFX_TYPES = {"tap", "typing", "success", "notify", "bell", "blips", "sparkle", "riser", "whoosh", "thud", "crash"}
+SFX_TYPES = {"tap", "typing", "success", "notify", "bell", "blips", "sparkle", "riser", "whoosh", "thud", "crash", "stab", "hit"}
+STYLES = {"minimal", "soft"}
+# minimal layers: k kick, h hats, r rim, b syncopated sub bass, s 16th sequence, p drone
+LAYERS = {"silent": "", "intro": "p", "light": "khp", "build": "khrsp", "full": "khrbsp",
+          "breakdown": "rsp", "climax": "khrbsp", "outro": "p"}
 
 
 def main():
@@ -58,18 +67,22 @@ def main():
         write(out / "preview-mix.wav", mix / max(1.0, np.max(np.abs(mix)) / 0.95))
         print(f"→ {out/'bgm-duck.wav'}  (ducked {cues.get('duck_db', -8)} dB under {vp.name})")
         print(f"→ {out/'preview-mix.wav'}  (listen-only: bed + voice)")
-    print(f"→ {out/'bgm.wav'}  ({dur:.2f}s, {cues.get('bpm', 120)} BPM, {cues.get('key', 'A minor')})")
+    print(f"→ {out/'bgm.wav'}  ({dur:.2f}s, {cues.get('style', 'minimal')}, {cues.get('bpm', 120)} BPM, {cues.get('key', 'A minor')})")
 
 
 def validate(c):
     errs = []
     if not c.get("duration"):
         errs.append("duration is required")
+    if c.get("style", "minimal") not in STYLES:
+        errs.append(f"style '{c.get('style')}' not in {sorted(STYLES)}")
     for i, s in enumerate(c.get("sections", [])):
         if s.get("energy") not in ENERGIES:
             errs.append(f"sections[{i}].energy '{s.get('energy')}' not in {sorted(ENERGIES)}")
         if not (0 <= s["start"] < s["end"] <= c["duration"] + 1e-6):
             errs.append(f"sections[{i}] start/end out of range")
+        if set(s.get("layers", "")) - set("khrbsp"):
+            errs.append(f"sections[{i}].layers '{s['layers']}' may only use k h r b s p")
     for i, x in enumerate(c.get("sfx", [])):
         if x.get("type") not in SFX_TYPES:
             errs.append(f"sfx[{i}].type '{x.get('type')}' not in {sorted(SFX_TYPES)}")
@@ -78,15 +91,214 @@ def validate(c):
 
 
 def print_plan(c):
+    minimal = c.get("style", "minimal") == "minimal"
     print("Sections:")
     for s in c["sections"]:
-        print(f"  {s['start']:6.2f}–{s['end']:6.2f}  {s['energy']:<9} {s.get('note', '')}")
+        lay = f"[{s.get('layers', LAYERS[s['energy']]) or '-'}]" if minimal else ""
+        print(f"  {s['start']:6.2f}–{s['end']:6.2f}  {s['energy']:<9} {lay:<9} {s.get('note', '')}")
+    if minimal:
+        cuts = cut_list(c)
+        print("Cuts (hit-synced): " + ", ".join(f"{x['t']:g}{'*' if x['big'] else ''}" for x in cuts) + "   (* = big hit)")
+        grid_check(c, [x["t"] for x in cuts])
     if c.get("sfx"):
         print(f"SFX: {len(c['sfx'])} cues")
 
 
+def cut_list(c):
+    """Cuts as [{"t", "big", "gain"}]. Default: every section start after 0; big when it opens full / climax / outro."""
+    starts = {float(s["start"]): s["energy"] for s in c.get("sections", [])}
+    raw = c.get("cuts")
+    if raw is None:
+        raw = sorted(t for t in starts if t > 0)
+    out = []
+    for x in raw:
+        x = {"t": x} if isinstance(x, (int, float)) else dict(x)
+        x["t"] = float(x["t"])
+        x.setdefault("big", starts.get(x["t"]) in ("full", "climax", "outro"))
+        out.append(x)
+    return sorted(out, key=lambda x: x["t"])
+
+
+def grid_check(c, times):
+    """Warn when cuts miss the 16th-note grid; suggest a tempo that fits them all, else the nearest grid times."""
+    if not times:
+        return
+    def off(bpm, div):
+        step = 60 / bpm / div
+        return max(abs(t - round(t / step) * step) for t in times)
+    bpm = float(c.get("bpm", 120)); step = 60 / bpm / 4
+    if off(bpm, 4) <= 0.02:
+        return
+    best = min((b / 2 for b in range(180, 281)), key=lambda b: (round(off(b, 2), 3), abs(b - bpm)))
+    if off(best, 2) <= 0.015:
+        print(f"  ! some cuts miss the 16th grid at {bpm:g} BPM; {best:g} BPM puts every cut within {off(best, 2)*1000:.0f} ms of an 8th note")
+    else:
+        bad = [f"{t:g}s → {round(t / step) * step:.3f}s" for t in times if abs(t - round(t / step) * step) > 0.02]
+        print(f"  ! off the 16th grid at {bpm:g} BPM (move the cut in the picture, or accept a looser hit): " + ", ".join(bad))
+
+
 # ---------------- synthesis ----------------
 def render(c):
+    return render_minimal(c) if c.get("style", "minimal") == "minimal" else render_soft(c)
+
+
+def render_minimal(c):
+    """Minimal electronic / minimal tech: dry kick, short hats, rim clicks, syncopated sub, sparse 16th
+    sine sequence, low drone. Every cut gets a half-beat drop in kick / rim / bass, a reverse swell
+    into it and a hit + minor-7th stab on it (卡点). Returns (music, accents); only music is ducked."""
+    dur = float(c["duration"]); N = int(SR * dur)
+    rng = np.random.default_rng(c.get("seed", 23))
+    bpm = float(c.get("bpm", 120)); BEAT = 60 / bpm; S16 = BEAT / 4; BAR = 4 * BEAT
+    tonic, mode = parse_key(c.get("key", "A minor"))
+    scale = SCALES[mode]
+    lo = 24 + tonic                                   # bass root in F1..E2
+    if lo < 29: lo += 12
+
+    def tt(d): return np.arange(int(d * SR)) / SR
+    def mtof(m): return 440 * 2 ** ((m - 69) / 12)
+    def deg(d, base):
+        o, k = divmod(d, 7); return base + scale[k] + 12 * o
+
+    def put(buf, t, x, g=1.0):
+        i = int(round(t * SR)); j = min(N, i + len(x))
+        if 0 <= i < N and j > i: buf[i:j] += g * x[:j - i]
+
+    def kick():
+        d = 0.35; t = tt(d); f = 42 + 95 * np.exp(-t / 0.025)
+        return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 0.11) * np.minimum(1, t / 0.001)
+    def hat():
+        d = 0.04; n = np.diff(np.concatenate([[0], rng.standard_normal(int(d * SR))]))
+        return band(n, 7000) * np.exp(-tt(d) / 0.008)
+    def rim():
+        d = 0.05; t = tt(d)
+        return (np.sin(2 * np.pi * 1750 * t) + 0.6 * np.sin(2 * np.pi * 3100 * t)) * np.exp(-t / 0.007)
+    def sub(f, d):
+        t = tt(d); return np.sin(2 * np.pi * f * t) * np.exp(-t / 0.14) * np.minimum(1, t / 0.004)
+    def blip(f, d=0.09, dec=0.03):
+        t = tt(d); return (np.sin(2 * np.pi * f * t) + 0.2 * np.sin(6 * np.pi * f * t)) * np.exp(-t / dec) * np.minimum(1, t / 0.001)
+    def stab(root, d=0.5):
+        iv = (0, 3, 7, 10) if mode == "minor" else (0, 4, 7, 11)
+        t = tt(d); x = sum(np.sin(2 * np.pi * mtof(root + i) * t) + 0.3 * np.sin(4 * np.pi * mtof(root + i) * t) for i in iv)
+        return band(x, 200, 3000) * np.exp(-t / 0.09) * np.minimum(1, t / 0.002)
+    def hit():
+        d = 1.2; t = tt(d); f = 36 + 60 * np.exp(-t / 0.04)
+        body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 0.3)
+        return body + 0.35 * band(rng.standard_normal(len(t)), 2500, 9000) * np.exp(-t / 0.02)
+    def swell(d, lo_hz=1500, hi_hz=8000, shape=3.0):
+        t = tt(d); return band(rng.standard_normal(len(t)), lo_hz, hi_hz) * (t / d) ** shape
+    def drone(d, m):
+        t = tt(d); x = sum(a * np.sin(2 * np.pi * mtof(m) * h * (1 + det) * t) for h, a in ((1, 1), (2, .25)) for det in (-0.003, 0.003))
+        return x * np.minimum(1, t / 1.2) * np.clip((d - t) / 1.0, 0, 1)
+    def noise_burst(d=2.0):
+        return band(rng.standard_normal(int(d * SR)), 3000, 12000) * np.exp(-tt(d) / 0.5) * np.minimum(1, tt(d) / 0.002)
+
+    seq_base, stab_root = lo + 36, lo + 24
+    hi_stab = stab_root + scale[2]                    # climax stabs move up a third
+    SEQ = [0, None, 4, None, None, 2, None, 4, 0, None, None, 4, None, 2, 6, None]   # i7 chord tones, sparse 16ths
+    BASS = [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0]                          # syncopated sub
+    ROOTS = [0, 0, 5, 6] if mode == "minor" else [0, 0, 3, 4]                       # i i VI VII / I I IV V per bar
+    cuts = cut_list(c)
+
+    def near_cut(t):
+        return any(x["t"] - BEAT / 2 - 1e-6 <= t < x["t"] - 1e-6 for x in cuts)
+
+    # "variation": true -> every bar of a 4-bar phrase sounds different (opt-in; default renders unchanged):
+    # the sequence follows the bar's chord and cycles 4 patterns (bar 4 is a busier fill), ghost kicks on
+    # bars 2 and 4, an open hat on bar 2, a rim / hat roll into each new phrase, a moving bass on odd bars,
+    # and a soft crash + reverse swell marking each phrase in full / climax sections.
+    VAR = bool(c.get("variation", False))
+    SEQS = [SEQ,
+            [0, None, None, 4, None, 2, 4, None, None, 6, None, 4, 2, None, None, 7],
+            [4, None, 2, None, 0, None, None, 4, 6, None, 4, None, None, 2, None, 0],
+            [0, 2, 4, None, 6, None, 4, None, 7, None, 6, 4, None, 2, 4, 6]]
+    BASS2 = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0]
+    def open_hat():
+        d = 0.16; n = np.diff(np.concatenate([[0], rng.standard_normal(int(d * SR))]))
+        return band(n, 6000) * np.exp(-tt(d) / 0.045)
+
+    mus = np.zeros(N); acc = np.zeros(N)
+    sections = sorted(c.get("sections", []), key=lambda s: s["start"])
+    for si, s in enumerate(sections):
+        a, b, e = float(s["start"]), float(s["end"]), s["energy"]
+        lv = float(s.get("level", 1.0)); L = s.get("layers", LAYERS[e])
+        if "p" in L:
+            put(mus, a, drone(b - a + 1.0, lo + 12), 0.05 * lv)
+            put(mus, a, drone(b - a + 1.0, deg(4, lo + 12)), 0.025 * lv)
+        if e == "outro":
+            put(acc, a, drone(b - a, seq_base), 0.03 * lv)
+        k = int(np.ceil(a / S16 - 1e-9))
+        while k * S16 < b - 1e-9:
+            t = k * S16; pos = k % 16; bar = int(t // BAR); gap = near_cut(t)
+            ph = bar % 4; big = e in ("full", "climax")
+            if "k" in L and pos % 4 == 0 and not gap: put(mus, t, kick(), (0.7 if e == "climax" else 0.6) * lv)
+            if VAR and "k" in L and not gap and ((ph in (1, 3) and pos == 14) or (ph == 3 and big and pos == 10)):
+                put(mus, t, kick(), 0.32 * lv)
+            if "h" in L and pos % 4 == 2 and not (VAR and ph == 1 and pos == 14): put(mus, t, hat(), 0.09 * lv)
+            if VAR and "h" in L and ph == 1 and pos == 14: put(mus, t, open_hat(), 0.07 * lv)
+            if "h" in L and "b" in L and pos % 2 == 1: put(mus, t, hat(), 0.03 * lv)
+            if VAR and "h" in L and ph == 3 and pos >= 12: put(mus, t, hat(), (0.03 + 0.015 * (pos - 12)) * lv)
+            if "r" in L and pos in (6, 14) and not gap: put(mus, t, rim(), 0.08 * lv)
+            if VAR and "r" in L and not gap and ((ph == 2 and pos == 11) or (ph == 3 and pos in (12, 13, 15))):
+                put(mus, t, rim(), 0.06 * lv)
+            bpat = BASS2 if VAR and bar % 2 else BASS
+            if "b" in L and bpat[pos] and not gap:
+                oct_up = 12 if VAR and ph == 2 and pos == 9 else 0
+                put(mus, t, sub(mtof(deg(ROOTS[bar % 4], lo) + oct_up), S16 * 2.5), 0.32 * lv)
+            seq = SEQS[ph] if VAR else SEQ
+            if "s" in L and seq[pos] is not None:
+                dg = seq[pos] + (ROOTS[bar % 4] if VAR else 0)
+                put(mus, t, blip(mtof(deg(dg, seq_base))), (0.05 if "b" in L else 0.04) * lv)
+            if VAR and big and pos == 0 and ph == 0 and t > a + 1e-6 and not gap: put(mus, t, noise_burst(1.2), 0.012 * lv)
+            if VAR and big and pos == 12 and ph == 3 and t + BEAT < b - 1e-6: put(mus, t, swell(BEAT, 1200, 8000, 2.5), 0.025 * lv)
+            k += 1
+        nxt = sections[si + 1]["energy"] if si + 1 < len(sections) else None
+        if e == "build" and nxt in ("full", "climax"):
+            d = min(2.0, b - a); put(mus, b - d, swell(d, 800, 7000, 2.0), 0.04 * lv)
+
+    climax = [(float(s["start"]), float(s["end"])) for s in sections if s["energy"] == "climax"]
+    in_climax = lambda t: any(a <= t < b for a, b in climax)
+    for x in cuts:                                    # 卡点: reverse swell into the cut, hit + stab on it
+        g = float(x.get("gain", 1.0)); t = x["t"]
+        put(acc, t - 0.5, swell(0.5), 0.05 * g)
+        put(acc, t, hit(), (0.45 if x["big"] else 0.3) * g)
+        put(acc, t, stab(stab_root, 0.7), 0.05 * g)
+
+    for x in c.get("sfx", []):
+        t0 = float(x["t"]); ty = x["type"]; g = float(x.get("gain", 1.0))
+        if ty == "tap": put(acc, t0, rim(), 0.07 * g)
+        elif ty == "typing":
+            cps = float(x.get("cps", 22)); n = int(x.get("chars", 20))
+            for i in range(n): put(acc, t0 + i / cps, hat(), 0.05 * g * (0.75 + 0.5 * rng.random()))
+        elif ty == "stab":
+            high = x.get("high", in_climax(t0))
+            put(acc, t0, stab(hi_stab if high else stab_root, 0.4), 0.06 * g)
+        elif ty == "hit": put(acc, t0, hit(), 0.3 * g)
+        elif ty == "success":
+            put(acc, t0, blip(mtof(seq_base + 12), 0.3, 0.08), 0.06 * g)
+            put(acc, t0 + 0.09, blip(mtof(deg(4, seq_base + 12)), 0.4, 0.1), 0.06 * g)
+        elif ty == "notify":
+            for i, d in enumerate((4, 2, 4)): put(acc, t0 + i * 0.1, blip(mtof(deg(d, seq_base + 12)), 0.25, 0.06), 0.05 * g)
+        elif ty == "bell": put(acc, t0, blip(mtof(int(x.get("note", seq_base + 12))), 1.0, 0.25), 0.06 * g)
+        elif ty == "blips":
+            n = int(x.get("count", 10)); st = float(x.get("step", 0.13)); m0 = int(x.get("note", seq_base - 12))
+            for i in range(n): put(acc, t0 + i * st, blip(mtof(m0 + scale[i % 7] + 12 * (i // 7))), 0.05 * g)
+        elif ty == "sparkle":
+            d = float(x.get("dur", 1.2))
+            for i in range(int(d * 16)):
+                put(acc, t0 + d * (i / (d * 16)) ** 0.8, blip(mtof(deg(int(rng.integers(0, 7)), seq_base + 12)), 0.12), 0.02 * g)
+        elif ty == "riser":
+            d = float(x.get("dur", 2.0)); put(acc, t0, swell(d, 800, 7000, 2.0), 0.05 * g)
+        elif ty == "whoosh":
+            d = float(x.get("dur", 0.5)); put(acc, t0, swell(d, 600, 6000, 1.5)[::-1], 0.05 * g)
+        elif ty == "thud": put(acc, t0, hit(), 0.45 * g)
+        elif ty == "crash": put(acc, t0, noise_burst(), 0.04 * g)
+
+    mus = reverb(mus, rng, 1.2, 0.15); acc = reverb(acc, rng, 1.6, 0.2)
+    return mus, acc
+
+
+def render_soft(c):
+    """The V2 launch sound: warm pads, plucked arpeggio, full drum kit, lead melody at the climax."""
     dur = float(c["duration"]); N = int(SR * dur)
     rng = np.random.default_rng(c.get("seed", 7))
     bpm = float(c.get("bpm", 120)); BEAT = 60 / bpm; BAR = 4 * BEAT

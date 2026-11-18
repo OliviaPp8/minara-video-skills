@@ -15,7 +15,18 @@ Script only, no animation. The output is one markdown script doc plus a folder o
 | Cut the recorded narration and place it on the voiceover track | `minara-voiceover` (reads the keyframe sheet's Voiceover and Time columns) |
 | Music / sound effects | `minara-music` (reads the music section and sound cues from this doc) |
 
-Structure: a single-scene supplement has 5–8 keyframes drawn from one `source.html`; a full film is usually 6–10 scenes. Write new scripts in English only.
+Structure reference: `V2 UI宣发/minara-v2-ui-promo/docs/02-补充脚本-第5镜-Automations.md` (single-scene supplement with keyframes K1–K7 in `docs/keyframes/automations/`, drawn from `source.html`) and `01-营销策划方案.md` §4.3 (8-scene full film). Use them for **structure only**. Those docs are bilingual; new scripts are English only.
+
+## Compliance: never say "invest"
+
+Do not use **invest / investing / investor(s) / investment(s)** (or **投资 / 投资者** in Chinese copy) anywhere in the copy this skill produces: scripts, voiceover, on-screen text, titles, subtitles, descriptions, tags, posts, replies, emails, CTAs, alt text. The word can read as investment advice and creates compliance risk. Say what the user actually does instead:
+
+- "Ask Minara how to trade NVDA after earnings", not "invest in NVDA"
+- "Ask which stocks look undervalued", not "find stocks to invest in"
+- "traders" / "users", not "investors"; "trading ideas" / "market analysis", not "investment ideas"
+- Risk lines say "Not financial advice", not "not investment advice"
+
+The only exception is a third-party proper noun cited as a source (for example a company's "Investor Relations" page in a citation link). Never use the word in Minara's own voice. Check the final copy for these words before handing it over.
 
 ## The core unit: the keyframe
 
@@ -46,7 +57,7 @@ The script should read like a person wrote it, not a model. Calm and neutral: st
 - **Read every voiceover line out loud.** If it sounds like an ad, a slogan generator, or a press release, rewrite it. If you wouldn't say it to a colleague, cut it.
 - Plain verbs, short sentences, present tense. Contractions are fine (`it's`, `you'll`). Example of the register: `Just ask.` / `Backtest it.` / `Minara builds the workflow.` / `Then it keeps watching.`
 - Neutral, not excited: no hype adjectives, no exclamation marks, no all caps, no emoji.
-- **Banned words**: exciting, powerful, seamless(ly), effortless(ly), revolutionary, game-changing, unlock, unleash, elevate, supercharge, empower, cutting-edge, next-level, robust, leverage, harness, journey, landscape, delve, transform(ative), "at your fingertips".
+- **Banned words**: exciting, powerful, seamless(ly), effortless(ly), revolutionary, game-changing, unlock, unleash, elevate, supercharge, empower, cutting-edge, next-level, robust, leverage, harness, journey, landscape, delve, transform(ative), "at your fingertips"; for compliance also invest / investing / investor(s) / investment(s) (see "Compliance: never say \"invest\"" above).
 - **Banned AI patterns**:
   - "Not just X, but Y" / "It's not X. It's Y."
   - Lists of three for rhythm ("faster, smarter, safer")
@@ -55,13 +66,14 @@ The script should read like a person wrote it, not a model. Calm and neutral: st
   - Colon or dash reveals ("One thing changed: everything.")
   - Trailing -ing clauses that add fake depth ("…, giving you full control.")
   - Significance padding ("a pivotal moment", "redefines how…")
-- Full pattern list: the AI-writing pattern list (e.g. Wikipedia: "Signs of AI writing"). Run every voiceover line and every piece of on-screen text against it before handing over.
+- Full pattern list: `techblog/AI-writing-patterns-to-avoid.md`. Run every voiceover line and every piece of on-screen text against it before handing over.
 - No profit promises ("guaranteed", "risk-free"). If backtests or returns appear, note where the risk line goes (e.g. `Past performance does not guarantee future results.`).
 - Facts not in the source material get ⚠️ and go to "Open questions". Don't invent.
 
 ## Workflow
 
-1. **Collect inputs**: brief, screenshots, frontend code path, Figma link, feature notes, existing cut, music reference if any. Ask once, in one combined question, only for what can't be inferred: length, landscape/portrait, platform (X / Discord / website), voiceover or not, where it sits in the film, music mood if the operator has one in mind.
+1. **Collect inputs**: brief, screenshots, frontend code path, Figma link, feature notes, existing cut, music reference if any. Ask once, in one combined question, only for what can't be inferred: length, platform (X / Discord / website), voiceover or not, where it sits in the film, music mood if the operator has one in mind.
+   Orientation is not a question: it follows the surface being demoed — Web / Desktop → landscape 2560×1440, Mobile App → portrait 1440×2560, one orientation per film (set by the operator, 2026-11-03).
 2. **Lock the presentation choices** at the top of the doc so they don't drift: the example case, which surface (Desktop / App / Web), time zone, what is not shown. Pick the case by the topic rules below.
 3. **Draft the text first**: section 1 (what to land), the user flow and UI copy, the scene list with timings, and the keyframe list (IDs, times, picture, voiceover, on-screen text, music). No images yet. This keeps image work from steering the story.
 4. **Make the keyframe images** by the routes below, into `docs/keyframes/<topic>/K1.png …`. UI frames go first (they're free and exact); ask before any AIGC frame that costs credits.
@@ -131,7 +143,7 @@ On-screen text is any text placed over the picture that is not part of the UI it
 
 The doc gives `minara-music` everything it needs, so music is decided with the script, not after.
 
-- **Film-level brief** (one block): tempo (BPM, default 120), key (default A minor; C major for bright pieces), feel in 1–2 plain lines (`Soft electronic, warm pads, light plucked arpeggio, no vocals.`), what to avoid (no EDM drops, no trailer hits, no lo-fi crackle, no vocal chops), and a reference track if the operator gave one. Licensed tracks come only from the operator.
+- **Film-level brief** (one block): tempo (BPM, default 120), key (default A minor; C major for bright pieces), feel in 1–2 plain lines (default `Minimal electronic / minimal tech: dry kick, short hats, rim clicks, sub bass, sparse sine sequence; hits synced to every cut. No vocals.`), what to avoid (no EDM drops, no trailer hits, no lush pads or melodies, no lo-fi crackle, no vocal chops). Scene cuts sit on the beat grid (at 120 BPM, whole or half seconds) so the music can hit them, and a reference track if the operator gave one. Licensed tracks come only from the operator.
 - **Per-keyframe energy**: one of `silent / intro / light / build / full / breakdown / climax / outro` (the `minara-music` vocabulary), plus a few words of mood. Energy follows the story: the product name or launch claim gets `climax`; a privacy or security beat gets `breakdown`; the end card gets `outro`.
 - **Sound cues**: only for visible actions, each with its exact time: `tap 35.0s`, `typing 32.1–34.6s (cps 18)`, `success 45.0s`, `notify 45.2s`, `whoosh 47.3s`, `thud 43.2s`, `bell 0.4s`. Types are the `minara-music` sfx list.
 - Voiceover ducks the music; say `duck under VO` in the brief when there is voiceover.
@@ -223,7 +235,7 @@ A full film adds a **scene overview table** (scene / time / content / voiceover)
 
 - [ ] The whole doc is English, including text inside keyframe images; no Chinese or other-language lines
 - [ ] Every voiceover line and on-screen text read aloud: sounds like a calm person, not an ad or a model
-- [ ] No banned words or AI patterns (checked against the AI-writing pattern list (e.g. Wikipedia: "Signs of AI writing"))
+- [ ] No banned words or AI patterns (checked against `techblog/AI-writing-patterns-to-avoid.md`)
 - [ ] Every point in section 1 has a keyframe
 - [ ] Every keyframe has all seven fields; `—` where empty, never blank
 - [ ] Every keyframe image exists, is 2560×1440 (or 1440×2560), and was opened and matches its Picture field

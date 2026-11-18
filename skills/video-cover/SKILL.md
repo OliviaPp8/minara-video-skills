@@ -5,9 +5,22 @@ description: Make a cover / thumbnail for a finished video. Reads the video's sc
 
 # /video-cover — Video cover from the script, in the brand's own system
 
-A cover is one still that says what the film is about in under two seconds. It has **three elements only: the brand logo, one main title and one key visual.** No label, subtitle, proof number, date or any other small text ; small text is unreadable at thumbnail size and only adds clutter. It is built in HTML from the same assets as the film (fonts, logo, key image), so type and colour match the brand exactly, then shot with headless Chrome.
+A cover is one still that says what the film is about in under two seconds. It has **three elements only: the brand logo, one main title and one key visual.** No label, subtitle, proof number, date or any other small text (the operator, 2026-10-23); small text is unreadable at thumbnail size and only adds clutter. It is built in HTML from the same assets as the film (fonts, logo, key image), so type and colour match the brand exactly, then shot with headless Chrome.
+
+Worked example: a launch film cover (2026-10-21), with the brand taken from a saved website and the title from the film's script.
 
 `<skill>` below means this skill's installed directory (for example `~/.claude/skills/video-cover`, `~/.agents/skills/video-cover` or `~/.codex/skills/video-cover`).
+
+## Compliance: never say "invest"
+
+Do not use **invest / investing / investor(s) / investment(s)** (or **投资 / 投资者** in Chinese copy) anywhere in the copy this skill produces: scripts, voiceover, on-screen text, titles, subtitles, descriptions, tags, posts, replies, emails, CTAs, alt text. The word can read as investment advice and creates compliance risk. Say what the user actually does instead:
+
+- "Ask Minara how to trade NVDA after earnings", not "invest in NVDA"
+- "Ask which stocks look undervalued", not "find stocks to invest in"
+- "traders" / "users", not "investors"; "trading ideas" / "market analysis", not "investment ideas"
+- Risk lines say "Not financial advice", not "not investment advice"
+
+The only exception is a third-party proper noun cited as a source (for example a company's "Investor Relations" page in a citation link). Never use the word in Minara's own voice. Check the final copy for these words before handing it over.
 
 ## Inputs (find them before asking)
 
@@ -24,7 +37,7 @@ If no brand source is given, ask once. Don't fall back to the Minara palette for
 
 | Source | What it is | What gets pulled |
 |---|---|---|
-| Brand-kit folder | e.g. `Brand/`, `Media Kit/`, `Brand Kit/`: logos, fonts, banners, a guideline doc | logo files (light / dark, SVG / PNG), font files, hex colours and named tokens from any `.css` `.scss` `.json` `.yaml` `.md` `.txt` `.pdf` inside, font names from guideline tables, guideline docs to read |
+| Brand-kit folder | e.g. `Brand/`, `Media Kit/`, `New Brand (2026_6)/`: logos, fonts, banners, a guideline doc | logo files (light / dark, SVG / PNG), font files, hex colours and named tokens from any `.css` `.scss` `.json` `.yaml` `.md` `.txt` `.pdf` inside, font names from guideline tables, guideline docs to read |
 | Single brand file | `tokens.json`, `brand.css`, `design.md`, `Brand Guidelines.pdf` | named colour tokens, hex colours, font families |
 | Saved website | `.mhtml` ("Save as → Webpage, Single File") | CSS custom properties, font families, letter-spacing, logo SVG, images, plus an offline `page.html` for a reference screenshot; lists images the page uses that the archive didn't save |
 | HyperFrames composition | the film's `index.html` | reuse its `:root` tokens, `@font-face` and `assets/` directly (no script needed) |
@@ -80,7 +93,7 @@ If no brand source is given, ask once. Don't fall back to the Minara palette for
      ffmpeg -v error -i <film>-cover.mp4 -vf "select='lte(n,7)'" -vsync 0 /tmp/n%02d.png   # look at n06 / n07
      ffmpeg -i <film>-cover.mp4 -af silencedetect=n=-60dB:d=0.02 -vn -f null - 2>&1 | grep -m1 silence_end
      ```
-   - Keep both files: `<film>.mp4` (no cover) for editors and platforms with a custom-thumbnail upload, `<film>-cover.mp4` for platforms that use the first frame.
+   - **Keep only `<film>-cover.mp4`** (the operator, 2026-10-27, to save disk): after it passes the checks, delete `<film>.mp4` (no cover) and the 4K master if one exists. Do any audio mux on the clean file before prepending. Pass `CRF=14` in the environment when the cover version replaces a CRF 14 delivery.
 7. **Deliver.** Copy the PNGs (and `-cover.mp4`) into the project `output/` next to the film, `open -R` the large one, and report: the title and where it came from (script or brand source), the logo file and key visual used, and the brand tokens used.
 
 ## Don't

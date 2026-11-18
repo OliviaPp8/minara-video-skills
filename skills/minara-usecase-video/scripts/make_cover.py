@@ -16,13 +16,20 @@ import argparse, html, json, os, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(os.path.dirname(HERE), "assets", "cover")
+LOGO = os.environ.get("MINARA_LOGO_PATH") or os.path.join(ASSETS, "minara-logo-dark.png")
+if not os.path.isfile(LOGO):
+    raise SystemExit("Set MINARA_LOGO_PATH to your logo (PNG for a dark background); the logo is not shipped")
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 SIZES = {"landscape": (1920, 1080), "portrait": (1080, 1920)}
 
-# Phone tutorials put the 390pt app at left:54 top:96, scaled to 90% of the 1080 frame.
-PHONE_CROP = "972:1728:54:96"
-# PC tutorials with the monitor frame: the screen is 1656×931 at (132, 38) in the 1920×1080 frame.
-MONITOR_CROP = "1656:931:132:38"
+# Screen crops per display mode, in 1080p frame coordinates (W:H:X:Y). See SKILL.md §3 "Device display".
+CROPS = {
+    "phone": "780:1688:150:116",          # phone body (assets/phone-frame.html), screen only
+    "monitor": "1656:931:132:74",         # PC monitor on desktop background, no stand (assets/pc-monitor-frame.html)
+    "legacy-phone": "972:1728:54:96",     # before 2026-11-13: 90% phone screen, no body
+    "legacy-monitor": "1656:931:132:38",  # before 2026-11-13: monitor with stand
+    "none": None,                         # full screen, or PC + phone in one frame: use the whole frame
+}
 
 
 def probe(video):
@@ -33,9 +40,11 @@ def probe(video):
     return s["width"], s["height"]
 
 
-def grab(video, t, dst, monitor=False):
+def grab(video, t, dst, frame="auto"):
     w, h = probe(video)
-    crop = PHONE_CROP if h > w else MONITOR_CROP if monitor else None
+    if frame == "auto":
+        frame = "phone" if h > w else "monitor"
+    crop = CROPS[frame]
     if crop:  # crops are in 1080p coordinates; 2K/4K exports scale them up
         k = min(w, h) / 1080
         crop = ":".join(str(round(int(v) * k)) for v in crop.split(":"))
@@ -87,13 +96,10 @@ def page(layout, kind, title, sub, shot):
                      W=W, H=H, gx=L["gx"], gy=L["gy"], logoH=60 if layout == "landscape" else 64,
                      pad=80 if layout == "landscape" else 80, objpos=L["objpos"]).items():
         css = css.replace("{" + k + "}", str(v))
-    # brand logo is not shipped; put your own at assets/cover/logo.png or set COVER_LOGO
-    logo = os.environ.get("COVER_LOGO") or os.path.join(ASSETS, "logo.png")
-    logo_tag = f'<img class="logo" src="file://{logo}">' if os.path.exists(logo) else ""
     sub_html = f'<div class="ts" style="font-size:{L["ts"]}px">{html.escape(sub)}</div>' if sub else ""
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>{css}</style></head><body>
 <div class="glow"></div>
-{logo_tag}
+<img class="logo" src="file://{LOGO}">
 <div class="copy" style="{L['copy']}"><div class="tt" style="font-size:{L['tt']}px">{html.escape(title)}</div>{sub_html}</div>
 <div class="shot" style="{L['shot']}"><img src="file://{shot}"></div>
 </body></html>"""
@@ -111,7 +117,10 @@ def main():
     g.add_argument("--video", help="rendered use case mp4; the frame at --at becomes the shot")
     g.add_argument("--shot", help="use this image as the shot instead")
     ap.add_argument("--at", type=float, default=0, help="seconds into --video")
-    ap.add_argument("--monitor", action="store_true", help="PC video has the monitor frame; crop to the screen")
+    ap.add_argument("--frame", default="auto", choices=["auto", *CROPS],
+                    help="display mode of the video; auto = phone for portrait, monitor for landscape. "
+                         "Use none for full-screen films and PC + phone films")
+    ap.add_argument("--monitor", action="store_true", help="alias for --frame monitor")
     ap.add_argument("--kind", choices=["desktop", "phone"], help="shot kind (auto from --video)")
     ap.add_argument("--title", required=True)
     ap.add_argument("--sub", default="")
@@ -123,7 +132,7 @@ def main():
     os.makedirs(out, exist_ok=True)
     if a.video:
         shot = os.path.join(out, "shot.png")
-        kind = grab(a.video, a.at, shot, a.monitor)
+        kind = grab(a.video, a.at, shot, "monitor" if a.monitor else a.frame)
     else:
         shot = os.path.abspath(a.shot)
         kind = a.kind or "desktop"

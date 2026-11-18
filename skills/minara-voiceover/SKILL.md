@@ -18,7 +18,7 @@ Where it sits:
 | **Voiceover track, cut and placed** | **`minara-voiceover`** |
 | BGM ducked under the voiceover | `minara-music` (`--vo assets/vo.wav`) |
 
-Precedent: the Minara V2 launch film's narration was first cut by hand into 20 lines; this skill's `align` reproduces those cuts within 0.1s automatically.
+Precedent: `V2 UI宣发/minara-v2-ui-promo/audio-src/make_vo.py` cut `narration-full.mp3` by hand into 20 lines. This skill's `align` reproduces those cuts within 0.1s automatically.
 
 ## Tool
 

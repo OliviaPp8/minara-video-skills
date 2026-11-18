@@ -1,0 +1,160 @@
+{
+ "title": "Product introduction (59s) - minimal tech, hit-synced",
+ "duration": 59,
+ "bpm": 120,
+ "key": "A minor",
+ "seed": 23,
+ "style": "minimal",
+ "sections": [
+  {
+   "start": 0,
+   "end": 4,
+   "energy": "intro",
+   "note": "S1 News / Signals / Events, word pops"
+  },
+  {
+   "start": 4,
+   "end": 10,
+   "energy": "light",
+   "note": "S2 product wordmark + sculpture"
+  },
+  {
+   "start": 10,
+   "end": 18,
+   "energy": "build",
+   "note": "S3 inputs -> product -> outputs"
+  },
+  {
+   "start": 18,
+   "end": 32,
+   "energy": "full",
+   "note": "S4 backtest curves, final values"
+  },
+  {
+   "start": 32,
+   "end": 41,
+   "energy": "light",
+   "layers": "khrsp",
+   "note": "S5 general decision table"
+  },
+  {
+   "start": 41,
+   "end": 49,
+   "energy": "breakdown",
+   "note": "S6 by news type cards"
+  },
+  {
+   "start": 49,
+   "end": 53,
+   "energy": "climax",
+   "note": "S7 four model sizes"
+  },
+  {
+   "start": 53,
+   "end": 59,
+   "energy": "outro",
+   "note": "S8 end card + URL"
+  }
+ ],
+ "cuts": [
+  {
+   "t": 4,
+   "big": true
+  },
+  10,
+  18,
+  32,
+  41,
+  49,
+  53
+ ],
+ "sfx": [
+  {
+   "t": 0.25,
+   "type": "tap"
+  },
+  {
+   "t": 0.97,
+   "type": "tap"
+  },
+  {
+   "t": 1.69,
+   "type": "tap"
+  },
+  {
+   "t": 5.75,
+   "type": "tap"
+  },
+  {
+   "t": 6.05,
+   "type": "tap"
+  },
+  {
+   "t": 14.0,
+   "type": "tap"
+  },
+  {
+   "t": 14.7,
+   "type": "tap"
+  },
+  {
+   "t": 15.4,
+   "type": "tap"
+  },
+  {
+   "t": 42.6,
+   "type": "tap"
+  },
+  {
+   "t": 43.05,
+   "type": "tap"
+  },
+  {
+   "t": 43.5,
+   "type": "tap"
+  },
+  {
+   "t": 43.65,
+   "type": "tap"
+  },
+  {
+   "t": 44.55,
+   "type": "tap"
+  },
+  {
+   "t": 8.0,
+   "type": "stab"
+  },
+  {
+   "t": 8.4,
+   "type": "stab"
+  },
+  {
+   "t": 12.1,
+   "type": "stab"
+  },
+  {
+   "t": 21.6,
+   "type": "stab"
+  },
+  {
+   "t": 24.1,
+   "type": "stab"
+  },
+  {
+   "t": 27.5,
+   "type": "stab"
+  },
+  {
+   "t": 29.6,
+   "type": "stab"
+  },
+  {
+   "t": 54.6,
+   "type": "typing",
+   "chars": 24,
+   "cps": 28
+  }
+ ],
+ "duck_db": -8
+}

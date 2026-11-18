@@ -1,0 +1,32 @@
+<!-- PC + phone in one frame (landscape): e.g. "set it up on the computer, get the notification on the phone".
+     Drop the CSS into the composition's <style>. Two coordinate systems, one per device:
+       PC     : 1440×810 pt app, K_PC = 1.0,  OX_PC = 124, OY_PC = 134   (monitor 1468×838 at left 110 / top 120)
+       Phone  : 390×844 pt app,  K_PH = 0.98, OX_PH = 1450, OY_PH = 168  (body 406×859 at left 1442 / top 160)
+     The phone overlaps the monitor's lower-right corner and sits in front of it.
+     Cursor (arrow) belongs to the PC, touch point to the phone; position each with its own K / OX / OY.
+     Camera: push in on the device that is acting; move between devices with a short camTo, don't cut. -->
+<style>
+#desk-bg { position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(900px 620px at 18% 22%, rgba(255,255,255,0.55), rgba(255,255,255,0) 70%),
+    radial-gradient(1100px 760px at 86% 84%, rgba(160,164,172,0.55), rgba(160,164,172,0) 70%),
+    linear-gradient(135deg, #D9DBDF 0%, #BFC2C8 45%, #9EA2AA 100%); }
+#cam { position: absolute; inset: 0; z-index: 1; }
+#monitor { position: absolute; left: 110px; top: 120px; width: 1468px; height: 838px; border-radius: 22px;
+  background: linear-gradient(180deg, #1C1D20 0%, #0E0F11 100%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.14), 0 36px 80px rgba(20,22,26,0.45); }
+#screen { position: absolute; left: 14px; top: 14px; width: 1440px; height: 810px; border-radius: 10px; overflow: hidden; background: #000; }
+#screen #app-pc { position: absolute; left: 0; top: 0; width: 1440px; height: 810px; }
+#phone { position: absolute; left: 1442px; top: 160px; width: 406px; height: 859px; border-radius: 60px; z-index: 2;
+  background: linear-gradient(160deg, #3A3C41 0%, #1C1D20 40%, #2B2D31 100%);
+  box-shadow: 0 0 0 1.5px #4A4C52, inset 0 0 0 2px #0B0B0C, 0 40px 90px rgba(0,0,0,0.5); }
+#phone-screen { position: absolute; left: 8px; top: 8px; width: 382.2px; height: 827.1px; border-radius: 52px; overflow: hidden; background: #000; }
+#phone-screen #app-ph { position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.98); transform-origin: 0 0; }
+#island { position: absolute; left: 129px; top: 11px; width: 124px; height: 36px; border-radius: 18px; background: #000; z-index: 5; }
+</style>
+
+<div id="desk-bg"></div>
+<div id="cam">
+  <div id="monitor"><div id="screen"><div id="app-pc"><!-- PC UI --></div></div></div>
+  <div id="phone"><div id="phone-screen"><div id="app-ph"><!-- phone UI --></div><div id="island"></div></div></div>
+</div>

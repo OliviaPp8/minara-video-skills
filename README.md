@@ -5,11 +5,11 @@ Seven [Claude Code](https://claude.com/claude-code) skills for making product vi
 | Skill | What it does |
 |---|---|
 | [`minara-videoscript`](skills/minara-videoscript/SKILL.md) | Writes the script before any animation: a keyframe sheet where every still keyframe (rendered from UI code, exported from Figma, or AIGC-generated) carries its picture, voiceover, on-screen text, timing and music. Calm, natural English voice. |
-| [`minara-video`](skills/minara-video/SKILL.md) | Marketing / launch / demo films built in HTML with [HyperFrames](https://hyperframes.heygen.com): storyboard board, per-second timeline, local test page with a frame scrubber, render. |
+| [`minara-video`](skills/minara-video/SKILL.md) | Marketing / launch / demo films built in HTML with [HyperFrames](https://hyperframes.heygen.com): storyboard board, per-second timeline, local test page with a frame scrubber, render. Product screens are rebuilt in HTML; screen recordings are reference only. |
 | [`minara-usecase-video`](skills/minara-usecase-video/SKILL.md) | Use case and beginner tutorial videos that rebuild the product UI faithfully (mobile or desktop), plus cover images. |
 | [`minara-guide-video`](skills/minara-guide-video/SKILL.md) | Adds voiceover and captions to a screen recording you supply (uses a separate `caption-recording` skill for the mechanics, not included). |
 | [`minara-voiceover`](skills/minara-voiceover/SKILL.md) | Cuts a narration recording into the script's lines, places each one at its scripted time, mixes it into the video and checks every line lands on time. |
-| [`minara-music`](skills/minara-music/SKILL.md) | Generates BGM and synced sound effects locally from the script's cue sheet (numpy synth, deterministic), ducked under the voiceover. |
+| [`minara-music`](skills/minara-music/SKILL.md) | Generates BGM and synced sound effects locally from the script's cue sheet (numpy synth, deterministic): minimal electronic by default, every scene cut hit-synced, ducked under the voiceover. |
 | [`video-cover`](skills/video-cover/SKILL.md) | Makes the cover from the script in your brand kit's own fonts, colours and logo: logo, one title, one key visual, no small text. Exports 2560×1440 + 1280×720 with an overlap check, and can put the cover on the film's first 0.1s. |
 
 Typical order: `minara-videoscript` → `minara-video` or `minara-usecase-video` → `minara-voiceover` → `minara-music` → `video-cover`.

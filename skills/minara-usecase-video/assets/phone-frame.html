@@ -1,0 +1,34 @@
+<!-- Mobile use case (portrait, device mode): the app inside a phone body.
+     Drop the CSS into the composition's <style>; #app goes in #phone-screen.
+     Geometry (1080×1920 frame): screen = 390×844 pt × K 2.0 = 780×1688 px, bezel 18 px,
+     phone body 816×1724 centred at left 132 / top 98.
+     So in JS: K = 2.0, OX = 150, OY = 116 (screen top-left in frame px).
+     The Dynamic Island covers the top centre of the status bar: rebuild the status bar
+     (time left, signal / battery right) in the app's top 54 pt and keep content below it;
+     keep the bottom 34 pt for the home indicator. -->
+<style>
+#phone-bg { position: absolute; inset: 0; z-index: 0;
+  background: radial-gradient(900px 1200px at 50% 45%, #2A2C31 0%, #16171A 55%, #0E0F11 100%); }
+#cam { position: absolute; inset: 0; z-index: 1; }
+#phone { position: absolute; left: 132px; top: 98px; width: 816px; height: 1724px; border-radius: 118px;
+  background: linear-gradient(160deg, #3A3C41 0%, #1C1D20 40%, #2B2D31 100%);
+  box-shadow: 0 0 0 2px #4A4C52, inset 0 0 0 3px #0B0B0C, 0 50px 110px rgba(0,0,0,0.55); }
+#phone .btn { position: absolute; width: 6px; border-radius: 3px; background: linear-gradient(90deg, #2A2B2F, #4A4C52); }
+#phone .btn.l1 { left: -6px; top: 330px; height: 70px; }
+#phone .btn.l2 { left: -6px; top: 430px; height: 130px; }
+#phone .btn.l3 { left: -6px; top: 580px; height: 130px; }
+#phone .btn.r1 { right: -6px; top: 480px; height: 200px; transform: scaleX(-1); }
+#phone-screen { position: absolute; left: 18px; top: 18px; width: 780px; height: 1688px; border-radius: 100px; overflow: hidden; background: #000; }
+#phone-screen #app { position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(2); transform-origin: 0 0; }
+#island { position: absolute; left: 264px; top: 22px; width: 252px; height: 74px; border-radius: 37px; background: #000; z-index: 5; }
+#home-ind { position: absolute; left: 260px; bottom: 16px; width: 260px; height: 10px; border-radius: 5px; background: rgba(0,0,0,0.85); z-index: 5; }
+</style>
+
+<div id="phone-bg"></div>
+<div id="cam">
+  <div id="phone">
+    <div class="btn l1"></div><div class="btn l2"></div><div class="btn l3"></div><div class="btn r1"></div>
+    <div id="phone-screen"><div id="app"><!-- product UI, 390×844 pt --></div><div id="island"></div><div id="home-ind"></div></div>
+  </div>
+  <!-- touch point / overlays stay inside #cam, positioned with OX + x*K, OY + y*K -->
+</div>

@@ -1,14 +1,14 @@
 {
   "title": "Minara V2 launch film (60s)",
-  "duration": 60, "bpm": 120, "key": "A minor", "seed": 7,
+  "duration": 60, "bpm": 120, "key": "A minor", "seed": 7, "style": "soft",
   "sections": [
-    {"start": 0,  "end": 5,  "energy": "intro",     "note": "S1 data converges → avatar appears"},
-    {"start": 5,  "end": 15, "energy": "light",     "note": "S2 mobile: ask, pick a strategy"},
-    {"start": 15, "end": 25, "energy": "build",     "note": "S3 desktop: write a strategy in plain words"},
-    {"start": 25, "end": 38, "energy": "full",      "note": "backtest → go live → automations"},
-    {"start": 38, "end": 46, "energy": "breakdown", "note": "web version + private cloud sandbox"},
+    {"start": 0,  "end": 5,  "energy": "intro",     "note": "S1 数据汇聚 → 头像出现"},
+    {"start": 5,  "end": 15, "energy": "light",     "note": "S2 手机端：提问、选策略"},
+    {"start": 15, "end": 25, "energy": "build",     "note": "S3 桌面端：自然语言写策略"},
+    {"start": 25, "end": 38, "energy": "full",      "note": "回测 → 上线 → 自动化"},
+    {"start": 38, "end": 46, "energy": "breakdown", "note": "浏览器版 + 私有云沙盒"},
     {"start": 46, "end": 54, "energy": "climax",    "note": "The all-new Minara V2"},
-    {"start": 54, "end": 60, "energy": "outro",     "note": "end card + logo"}
+    {"start": 54, "end": 60, "energy": "outro",     "note": "结尾卡 + logo"}
   ],
   "sfx": [
     {"t": 0.1,  "type": "sparkle", "dur": 1.25},
